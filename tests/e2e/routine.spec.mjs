@@ -76,3 +76,17 @@ test('same-day completed task keeps its historical name after editing', async ({
   await expect(page.getByRole('checkbox', { name: 'Concluir Novo nome fictício' })).toBeVisible();
   await expect(page.getByRole('checkbox', { name: 'Concluir Histórico fictício' })).toHaveCount(0);
 });
+
+test('unreadable local data is not silently replaced', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('cme-v1', '{invalid');
+  });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Não foi possível abrir seus dados' })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('cme-v1'))).toBe('{invalid');
+  const [backup] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Exportar cópia original' }).click(),
+  ]);
+  expect(await readFile(await backup.path(), 'utf8')).toBe('{invalid');
+});

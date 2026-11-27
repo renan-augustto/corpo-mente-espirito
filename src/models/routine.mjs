@@ -23,7 +23,9 @@ export function validTask(t) {
     typeof t.name === 'string' &&
     t.name.trim() &&
     t.name.length <= 150 &&
+    typeof t.pillar === 'string' &&
     Object.hasOwn(pillars, t.pillar) &&
+    typeof t.time === 'string' &&
     hh.test(t.time) &&
     Number.isInteger(t.minutes) &&
     t.minutes >= 1 &&

@@ -35,7 +35,9 @@ export function remind(state, toast, save) {
       else
         try {
           new Notification(pillars[t.pillar], { body: t.name, tag: id });
-        } catch (e) {}
+        } catch {
+          // Notification failure must not interrupt local reminders.
+        }
     }
   }
   for (let id of Object.keys(state.notified)) if (!id.startsWith(k)) delete state.notified[id];

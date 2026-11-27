@@ -37,6 +37,15 @@ describe('routine history and schema v1', () => {
     expect(validTask({ ...t, time: '25:00' })).toBe(false);
   });
 
+  it('rejects coerced non-string task time and pillar in backups', () => {
+    const s = fixture();
+    const t = task('Fictícia', 'body', '09:00', 15, all, day);
+    s.tasks.push({ ...t, time: ['09:00'] });
+    expect(() => validate(s)).toThrow();
+    s.tasks = [{ ...t, pillar: ['body'] }];
+    expect(() => validate(s)).toThrow();
+  });
+
   it('preserves original completed occurrence when editing', () => {
     const s = fixture();
     const t = task('Antes', 'body', '09:00', 10, all, yesterday);

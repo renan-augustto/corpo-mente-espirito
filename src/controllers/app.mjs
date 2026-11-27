@@ -1,3 +1,4 @@
+import { key } from '../config/constants.mjs';
 import { dateObj, today, shift, uid, validDate } from '../utils/dates.mjs';
 import {
   fresh,
@@ -19,12 +20,32 @@ import { esc, ico } from '../views/html.mjs';
 // The controller owns state, routing, browser events and side effects.
 export function startApp() {
   const $ = (selector) => document.querySelector(selector);
+  const host = location.hostname;
+  const environment =
+    host === 'corpo-mente-espirito.pages.dev' || host === 'renan-augustto.github.io'
+      ? 'Produção'
+      : host.endsWith('.corpo-mente-espirito.pages.dev')
+        ? 'Homologação'
+        : 'Ambiente local';
+  $('#app-version').textContent = 'v1.0.1 · ' + environment;
   let state;
   try {
     state = loadState(localStorage);
-  } catch (e) {
-    state = fresh();
-    console.warn(e);
+  } catch {
+    // Fail closed: never overwrite an unreadable existing backup with a fresh routine.
+    $('#main').innerHTML = `<section class="card"><h1>Não foi possível abrir seus dados</h1><p>Seus dados não foram substituídos. Exporte a cópia original antes de tentar restaurar o aplicativo.</p><div class="row"><button id="recover-raw">Exportar cópia original</button><button id="retry-load">Tentar novamente</button></div><p id="recovery-status" role="status"></p></section>`;
+    $('#recover-raw').addEventListener('click', () => {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw === null) throw Error('Nenhuma cópia disponível.');
+        download('tres-pilares-backup-recuperacao.json', raw, 'application/json');
+        $('#recovery-status').textContent = 'Cópia original exportada.';
+      } catch {
+        $('#recovery-status').textContent = 'Não foi possível ler a cópia original.';
+      }
+    });
+    $('#retry-load').addEventListener('click', () => location.reload());
+    return;
   }
   let selected = today(),
     month = dateObj(selected),
@@ -43,7 +64,7 @@ export function startApp() {
     try {
       persistState(localStorage, state);
       return true;
-    } catch (e) {
+    } catch {
       toast('Não foi possível salvar. Exporte seus dados em Ajustes.');
       return false;
     }
@@ -159,10 +180,10 @@ export function startApp() {
           break;
         replacePlan(state, pendingPlan);
         pendingPlan = null;
-        save();
+        const saved = save();
         $('#dialog').close();
         go('inicio');
-        toast('Seu plano está pronto.');
+        if (saved) toast('Seu plano está pronto.');
         break;
       case 'prev-day':
         selected = shift(selected, -1);
@@ -205,9 +226,9 @@ export function startApp() {
           )
         ) {
           state = fresh();
-          save();
+          const saved = save();
           go('inicio');
-          toast('Dados apagados.');
+          if (saved) toast('Dados apagados.');
         }
         break;
       case 'profile':
@@ -228,7 +249,7 @@ export function startApp() {
               ? 'Permissão concedida. Ative os lembretes no aplicativo.'
               : 'Permissão não concedida. Lembretes internos continuam disponíveis.',
           );
-        } catch (e) {
+        } catch {
           toast('Não foi possível pedir permissão. Use o calendário.');
         }
         break;
@@ -261,9 +282,9 @@ export function startApp() {
         confirm('Encerrar esta tarefa a partir de hoje? Os dias anteriores serão mantidos.')
       ) {
         retire(t);
-        save();
+        const saved = save();
         render();
-        toast('Tarefa encerrada.');
+        if (saved) toast('Tarefa encerrada.');
       }
       return;
     }
@@ -311,11 +332,11 @@ export function startApp() {
         let s = validate(raw);
         if (confirm('Substituir os dados locais pelo arquivo importado?')) {
           state = s;
-          save();
+          const saved = save();
           selected = today();
           month = dateObj(selected);
           go('inicio');
-          toast('Backup importado.');
+          if (saved) toast('Backup importado.');
         }
       } catch (err) {
         toast(err.message || 'Não foi possível importar.');
@@ -352,10 +373,10 @@ export function startApp() {
       }
       let old = state.tasks.find((x) => x.id === form.dataset.id);
       replaceTask(old, t);
-      save();
+      const saved = save();
       $('#dialog').close();
       render();
-      toast('Tarefa salva.');
+      if (saved) toast('Tarefa salva.');
     } else if (form.id === 'journal-form') {
       if (selected > today()) return;
       state.journal[selected] = {
@@ -366,15 +387,15 @@ export function startApp() {
         text: f.get('text'),
         next: f.get('next'),
       };
-      save();
+      const saved = save();
       render();
-      toast('Registro salvo.');
+      if (saved) toast('Registro salvo.');
     } else {
       state.profile = { name: f.get('name').trim() };
-      save();
+      const saved = save();
       $('#dialog').close();
       render();
-      toast('Perfil salvo.');
+      if (saved) toast('Perfil salvo.');
     }
   });
   window.addEventListener('hashchange', () => {

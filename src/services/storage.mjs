@@ -6,7 +6,15 @@ export function loadState(storage) {
   const raw = storage.getItem(key);
   if (!raw) return fresh();
   const parsed = JSON.parse(raw);
-  return { ...validate(parsed), notified: parsed.notified || {} };
+  const state = validate(parsed);
+  const notified = parsed.notified;
+  return {
+    ...state,
+    notified:
+      notified && typeof notified === 'object' && !Array.isArray(notified)
+        ? Object.fromEntries(Object.entries(notified).filter(([, value]) => value === true))
+        : {},
+  };
 }
 
 export function persistState(storage, state) {
