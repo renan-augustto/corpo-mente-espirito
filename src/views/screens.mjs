@@ -16,9 +16,11 @@ export function createViews({ getState, getSelected, getMonth }) {
   const due = (k) => modelDue(getState(), k);
   const isDone = (t, k) => modelIsDone(getState(), t, k);
   const stat = (k, p) => modelStat(getState(), k, p);
-  function dateNav() {
+  function dateNav(pastOnly = false) {
     const selected = getSelected();
-    return `<div class="row spread"><div class="row">${btn('', 'prev-day', 'icon-btn', 'left')}<label><span class="hidden">Data</span><input type="date" id="selected-date" value="${selected}"></label>${btn('', 'next-day', 'icon-btn', 'right')}</div>${btn('Hoje', 'today')}</div>`;
+    const max = pastOnly ? ` max="${today()}"` : '';
+    const nextDisabled = pastOnly && selected >= today() ? 'disabled' : '';
+    return `<div class="row spread"><div class="row"><button type="button" class="icon-btn" data-action="prev-day" aria-label="Dia anterior">${ico('left')}</button><label><span class="hidden">Data</span><input type="date" aria-label="Data" id="selected-date" value="${selected}"${max}></label><button type="button" class="icon-btn" data-action="next-day" aria-label="Próximo dia" ${nextDisabled}>${ico('right')}</button></div>${btn('Hoje', 'today')}</div>`;
   }
   function taskRows(k, edit = true) {
     let ts = due(k);
@@ -131,7 +133,7 @@ export function createViews({ getState, getSelected, getMonth }) {
     };
     return (
       heading('Diário pessoal', 'Um espaço privado para observar sua experiência.') +
-      `<div class="grid2"><section class="card">${dateNav()}<form id="journal-form"><div class="field"><label for="sleep">Horas de sono no total</label><input id="sleep" name="sleep" type="number" min="0" max="24" step="0.25" required value="${j.sleep}" placeholder="Ex.: 7.5"></div>${[
+      `<div class="grid2"><section class="card">${dateNav(true)}<form id="journal-form"><div class="field"><label for="sleep">Horas de sono no total</label><input id="sleep" name="sleep" type="number" min="0" max="24" step="0.25" required value="${j.sleep}" placeholder="Ex.: 7.5"></div>${[
         ['energy', 'Energia'],
         ['mood', 'Estado emocional'],
         ['focus', 'Concentração'],

@@ -92,3 +92,41 @@ test('unreadable local data is not silently replaced', async ({ page }) => {
   ]);
   expect(await readFile(await backup.path(), 'utf8')).toBe('{invalid');
 });
+
+test('journal opens today after browsing future routine and calendar dates', async ({ page }) => {
+  await page.goto('/');
+  await nav(page, 'Rotina').click();
+  const date = page.locator('#selected-date');
+  const current = await date.inputValue();
+  await page.getByRole('button', { name: 'Próximo dia' }).click();
+  const future = await date.inputValue();
+  expect(future > current).toBe(true);
+  await nav(page, 'Diário').click();
+  await expect(date).toHaveValue(current);
+  await expect(date).toHaveAttribute('max', current);
+  await expect(page.getByRole('button', { name: 'Próximo dia' })).toBeDisabled();
+  await page.locator('#sleep').fill('7.5');
+  await page.locator('#text').fill('Registro de hoje');
+  await page.getByRole('button', { name: 'Salvar registro' }).click();
+  await page.getByRole('button', { name: 'Dia anterior' }).click();
+  const previous = await date.inputValue();
+  expect(previous < current).toBe(true);
+  await page.locator('#sleep').fill('6');
+  await page.locator('#text').fill('Registro anterior');
+  await page.getByRole('button', { name: 'Salvar registro' }).click();
+  await expect(date).toHaveValue(previous);
+  await page.getByRole('button', { name: 'Próximo dia' }).click();
+  await expect(page.locator('#text')).toHaveValue('Registro de hoje');
+  await nav(page, 'Calendário').click();
+  const futureDay = page.locator(`[data-day="${future}"]`);
+  if (!(await futureDay.count())) {
+    await page.locator('[data-action="next-month"]').click();
+  }
+  await futureDay.click();
+  await nav(page, 'Diário').click();
+  await expect(date).toHaveValue(current);
+  await date.fill(future);
+  await expect(date).toHaveValue(current);
+  await expect(page.locator('#text')).toHaveValue('Registro de hoje');
+  await expect(page.getByRole('button', { name: 'Salvar registro' })).toBeEnabled();
+});

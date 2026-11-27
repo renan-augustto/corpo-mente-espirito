@@ -82,8 +82,12 @@ export function startApp() {
     getMonth: () => month,
   });
   function render() {
+    const previousRoute = route;
     route = location.hash.slice(1) || 'inicio';
     if (!navs.some((n) => n[0] === route)) route = 'inicio';
+    if (route === 'diario' && (previousRoute !== route || selected > today())) {
+      selected = today();
+    }
     $('#nav').innerHTML = navs
       .map(
         ([r, i, l]) =>
@@ -191,6 +195,7 @@ export function startApp() {
         render();
         break;
       case 'next-day':
+        if (route === 'diario' && selected >= today()) break;
         selected = shift(selected, 1);
         render();
         break;
@@ -295,6 +300,7 @@ export function startApp() {
       return;
     }
     if (b.dataset.journal) {
+      if (!validDate(b.dataset.journal) || b.dataset.journal > today()) return;
       selected = b.dataset.journal;
       render();
     }
@@ -312,7 +318,7 @@ export function startApp() {
       save();
       render();
     } else if (el.id === 'selected-date' && validDate(el.value)) {
-      selected = el.value;
+      selected = route === 'diario' && el.value > today() ? today() : el.value;
       render();
     } else if (el.id === 'reminders') {
       state.reminders = el.checked;
