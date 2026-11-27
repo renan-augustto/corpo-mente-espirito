@@ -59,3 +59,6 @@ O aplicativo é uma ferramenta de organização pessoal, não assistência médi
 | 2.1 | Indicações e recompensas, após validação legal |
 | 3.0 | Subtarefas, fichas de treino, estudo por PDF, simulados e IA avançada opcional |
 Consulte [roadmap](ROADMAP.md). A versão publicada, não este planejamento, determina recursos disponíveis. Preços e provedores futuros estão sujeitos à aprovação.
+
+## Alterações candidatas v1.0.1 — ainda não publicadas nesta etapa
+Edição de tarefa já concluída hoje preserva a ocorrência original e começa amanhã. Encerramento mantém a conclusão do dia; replanejamento começa amanhã quando já existem tarefas concluídas no dia, caso contrário começa hoje. Homologar antes de atualizar o manual da versão estável.

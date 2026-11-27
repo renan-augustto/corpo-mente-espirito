@@ -1,5 +1,5 @@
 import { pillars, all } from '../config/constants.mjs';
-import { today, dateObj, uid, hh, validDate } from '../utils/dates.mjs';
+import { today, dateObj, uid, hh, validDate, shift } from '../utils/dates.mjs';
 
 // Version 1 persistence contract: do not change without an explicit migration.
 export function fresh() {
@@ -54,3 +54,43 @@ export function stat(state, key, pillar) {
 }
 
 export const percentage = stat => stat.n ? Math.round(100 * stat.d / stat.n) : 0;
+
+// Closed occurrences remain in history. Changes never duplicate a completed day.
+export function isActive(task, day = today()) {
+  return !task.end || task.end > day;
+}
+
+export function retire(state, task, day = today()) {
+  if (!isActive(task, day)) return;
+  if (due(state, day).some(t => t.id === task.id) && isDone(state, task, day)) {
+    task.end = day;
+  } else if (task.start >= day) {
+    state.tasks = state.tasks.filter(t => t.id !== task.id);
+  } else {
+    task.end = shift(day, -1);
+  }
+}
+
+export function replaceTask(state, previous, next, day = today()) {
+  if (!previous) {
+    state.tasks.push(next);
+    return;
+  }
+  if (!isActive(previous, day)) return;
+  const completed = due(state, day).some(t => t.id === previous.id) && isDone(state, previous, day);
+  if (!completed && previous.start >= day) {
+    Object.assign(previous, next, { id: previous.id, start: previous.start });
+    return;
+  }
+  retire(state, previous, day);
+  state.tasks.push({ ...next, start: completed ? shift(day, 1) : day });
+}
+
+// Once any task has been completed today, start a replacement plan tomorrow.
+// This keeps completed occurrences visible and avoids counting replacement tasks twice.
+export function replacePlan(state, plan, day = today()) {
+  const start = due(state, day).some(t => isDone(state, t, day)) ? shift(day, 1) : day;
+  for (const task of [...state.tasks]) retire(state, task, day);
+  state.tasks.push(...plan.list.map(task => ({ ...task, start })));
+  state.profile = { name: plan.name };
+}
