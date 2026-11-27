@@ -1,5 +1,7 @@
 # Corpo, Mente & Espírito
 
+Planejamento e decisões de arquitetura: [roadmap oficial](docs/ROADMAP.md). Orientações de desenvolvimento: [AGENTS.md](AGENTS.md).
+
 Aplicativo pessoal de rotina, hábitos e reflexão. PWA estática, em português, sem dependências externas, sem conta e sem servidor de dados.
 
 ## Publicar no GitHub Pages (sem programação)
