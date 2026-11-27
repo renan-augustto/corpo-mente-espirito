@@ -79,8 +79,22 @@ export function startApp() {
   }
   function dialog(content) {
     let d = $('#dialog');
-    d.innerHTML = `<div class="row spread"><h2>${content.title}</h2><button class="icon-btn" data-action="close" aria-label="Fechar">${ico('close')}</button></div>${content.body}`;
+    d.innerHTML = `<div class="dialog-header row spread"><h2 id="dialog-title">${content.title}</h2><button type="button" class="icon-btn" data-action="close" aria-label="Fechar">${ico('close')}</button></div><div class="dialog-content">${content.body}</div><div class="dialog-footer row"></div>`;
+    d.setAttribute('aria-labelledby', 'dialog-title');
+    const body = d.querySelector('.dialog-content');
+    const footer = d.querySelector('.dialog-footer');
+    const form = body.querySelector('form[id]');
+    const submit = form?.querySelector('button[type="submit"]');
+    if (submit) {
+      submit.setAttribute('form', form.id);
+      footer.append(submit);
+    } else {
+      const actions = body.querySelector('[data-action="apply-plan"]')?.parentElement;
+      if (actions) footer.append(...actions.children);
+    }
+    footer.hidden = !footer.children.length;
     if (!d.open) d.showModal();
+    body.scrollTop = 0;
   }
   function taskDialog(id) {
     dialog(views.taskDialog(id));

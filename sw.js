@@ -1,5 +1,5 @@
 'use strict';
-const CACHE = 'tres-pilares-v1.0.1-refactor.4',
+const CACHE = 'tres-pilares-v1.0.1-refactor.5',
   ASSETS = [
     './',
     './index.html',

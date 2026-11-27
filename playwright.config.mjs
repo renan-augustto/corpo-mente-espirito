@@ -5,7 +5,11 @@ export default defineConfig({
   fullyParallel: true,
   retries: 0,
   reporter: [['list'], ['html', { open: 'never' }]],
-  use: { baseURL: 'http://127.0.0.1:8765', trace: 'retain-on-failure' },
+  use: {
+    baseURL: 'http://127.0.0.1:8765',
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+  },
   projects: [
     { name: 'desktop-chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'mobile-chromium', use: { ...devices['Pixel 7'] } },
