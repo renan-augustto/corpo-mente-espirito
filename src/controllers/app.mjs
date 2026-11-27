@@ -21,12 +21,12 @@ import { esc, ico } from '../views/html.mjs';
 export function startApp() {
   const $ = (selector) => document.querySelector(selector);
   const host = location.hostname;
-  const environment =
-    host === 'corpo-mente-espirito.pages.dev' || host === 'renan-augustto.github.io'
-      ? 'Produção'
-      : host.endsWith('.corpo-mente-espirito.pages.dev')
-        ? 'Homologação'
-        : 'Ambiente local';
+  let environment = 'Ambiente local';
+  if (host === 'corpo-mente-espirito.pages.dev' || host === 'renan-augustto.github.io') {
+    environment = 'Produção';
+  } else if (host.endsWith('.corpo-mente-espirito.pages.dev')) {
+    environment = 'Homologação';
+  }
   $('#app-version').textContent = 'v1.0.1 · ' + environment;
   let state;
   try {

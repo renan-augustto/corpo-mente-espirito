@@ -82,7 +82,9 @@ test('unreadable local data is not silently replaced', async ({ page }) => {
     localStorage.setItem('cme-v1', '{invalid');
   });
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Não foi possível abrir seus dados' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Não foi possível abrir seus dados' }),
+  ).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('cme-v1'))).toBe('{invalid');
   const [backup] = await Promise.all([
     page.waitForEvent('download'),

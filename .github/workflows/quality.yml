@@ -37,6 +37,11 @@ jobs:
       - run: npm --version
       - run: npm ci --no-audit --no-fund
       - run: npm run format:check
+      - name: Show formatting diff on failure
+        if: failure()
+        run: |
+          npm run format
+          git diff -- src/controllers/app.mjs tests/e2e/routine.spec.mjs
   e2e:
     runs-on: ubuntu-latest
     steps:
