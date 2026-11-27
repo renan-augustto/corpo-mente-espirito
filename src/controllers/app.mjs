@@ -33,7 +33,8 @@ export function startApp() {
     state = loadState(localStorage);
   } catch {
     // Fail closed: never overwrite an unreadable existing backup with a fresh routine.
-    $('#main').innerHTML = `<section class="card"><h1>Não foi possível abrir seus dados</h1><p>Seus dados não foram substituídos. Exporte a cópia original antes de tentar restaurar o aplicativo.</p><div class="row"><button id="recover-raw">Exportar cópia original</button><button id="retry-load">Tentar novamente</button></div><p id="recovery-status" role="status"></p></section>`;
+    $('#main').innerHTML =
+      `<section class="card"><h1>Não foi possível abrir seus dados</h1><p>Seus dados não foram substituídos. Exporte a cópia original antes de tentar restaurar o aplicativo.</p><div class="row"><button id="recover-raw">Exportar cópia original</button><button id="retry-load">Tentar novamente</button></div><p id="recovery-status" role="status"></p></section>`;
     $('#recover-raw').addEventListener('click', () => {
       try {
         const raw = localStorage.getItem(key);
