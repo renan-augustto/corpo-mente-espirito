@@ -1,17 +1,36 @@
-// Run: node tests/logic.cjs. Tests core logic in isolation, not a browser.
-const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
-async function main() {
+// Run: node tests/logic.cjs. Pure module regression checks, no browser.
+const assert=require('node:assert/strict');
+async function main(){
 const constants=await import('../src/config/constants.mjs');
 const dates=await import('../src/utils/dates.mjs');
 const models=await import('../src/models/routine.mjs');
 const storage=await import('../src/services/storage.mjs');
-const code=fs.readFileSync(path.join(__dirname,'../app.js'),'utf8').replace(/^import .*;$/gm,'');
-const context=vm.createContext({...constants,...dates,fresh:models.fresh,validTask:models.validTask,validate:models.validate,task:models.task,modelDue:models.due,modelIsDone:models.isDone,modelStat:models.stat,percentage:models.percentage,isActive:models.isActive,modelRetire:models.retire,modelReplaceTask:models.replaceTask,replacePlan:models.replacePlan,...storage,console,Date,TextEncoder,FormData,crypto:require('node:crypto').webcrypto,localStorage:{getItem:()=>null,setItem:()=>{}},document:{addEventListener:()=>{}},window:{addEventListener:()=>{}},location:{hash:''}});
-vm.runInContext(code.slice(0,code.lastIndexOf('\nrender();')),context);
-vm.runInContext(`globalThis.test=()=>{const d=today();const t=task('Teste','body','10:00',15);state.tasks=[t];const initial=stat(d);state.done[d]=[t.id];const completed=stat(d);const t2=task('Histórico','mind','11:00',20,all,shift(d,-2));state.tasks.push(t2);replaceTask(t2,task('Novo','mind','12:00',20));let f=new FormData();for(const [k,v] of Object.entries({name:'Teste',wake:'08:00',bed:'22:00',available:'20',energy:'low'}))f.set(k,v);for(const g of ['job','study','exercise','read'])f.append('goals',g);let plan=planFrom(f);return {initial,completed,history:due(shift(d,-1)).map(x=>x.name),now:due(d).map(x=>x.name),pillars:[...new Set(plan.list.map(x=>x.pillar))],budget:plan.list.reduce((n,x)=>n+x.minutes,0),valid:validate(state).version,invalid:validTask({...t,time:'25:00'}),escape:esc('<script>'),fold:fold('A'.repeat(90)),phase:phase().title}}`,context);
-const r=JSON.parse(JSON.stringify(vm.runInContext('test()',context)));
-assert.deepEqual(r.initial,{n:1,d:0});assert.deepEqual(r.completed,{n:1,d:1});assert.deepEqual(r.history,['Histórico']);assert.deepEqual(r.now,['Teste','Novo']);assert.deepEqual(r.pillars,['mind','body','spirit']);assert.ok(r.budget<=25);assert.equal(r.valid,1);assert.equal(r.invalid,false);assert.equal(r.escape,'&lt;script&gt;');assert.ok(r.fold.includes('\r\n '));assert.equal(r.phase,'Fundação');console.log('PASS: recurrence, completion, historical edits, onboarding budget, validation, escaping, ICS folding, phases.');
-
+const {planFrom}=await import('../src/models/plan.mjs');
+const {esc}=await import('../src/views/html.mjs');
+const {fold,buildCalendar}=await import('../src/services/calendar.mjs');
+const baseline=models.fresh(), day0=dates.today();
+const t=models.task('Teste','body','10:00',15);
+baseline.tasks.push(t);
+assert.deepEqual(models.stat(baseline,day0),{n:1,d:0});
+baseline.done[day0]=[t.id];
+assert.deepEqual(models.stat(baseline,day0),{n:1,d:1});
+const t2=models.task('Histórico','mind','11:00',20,constants.all,dates.shift(day0,-2));
+baseline.tasks.push(t2);
+models.replaceTask(baseline,t2,models.task('Novo','mind','12:00',20));
+assert.deepEqual(models.due(baseline,dates.shift(day0,-1)).map(t=>t.name),['Histórico']);
+assert.deepEqual(models.due(baseline,day0).map(t=>t.name),['Teste','Novo']);
+const f=new FormData();
+for(const [k,v] of Object.entries({name:'Teste',wake:'08:00',bed:'22:00',available:'20',energy:'low'}))f.set(k,v);
+for(const g of ['job','study','exercise','read'])f.append('goals',g);
+const plan=planFrom(f);
+assert.deepEqual([...new Set(plan.list.map(t=>t.pillar))],['mind','body','spirit']);
+assert.ok(plan.list.reduce((n,t)=>n+t.minutes,0)<=25);
+assert.equal(models.validTask({...t,time:'25:00'}),false);
+assert.equal(esc('<script>'),'&lt;script&gt;');
+assert.ok(fold('A'.repeat(90)).includes('\r\n '));
+assert.equal(models.phase(baseline).title,'Fundação');
+assert.ok(buildCalendar(baseline).includes('BEGIN:VALARM'));
+console.log('PASS: recurrence, completion, historical edits, onboarding budget, escaping, ICS, phases.');
 // Direct tests for extracted model, including recurrence and independent dates.
 const state=models.fresh(), day=dates.today(), previous=dates.shift(day,-1);
 const recurring=models.task('Regression','body','09:00',10,constants.all,previous);
@@ -58,3 +77,4 @@ console.log('PASS: same-day edit, retire, replan and local storage regression.')
 
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});
+

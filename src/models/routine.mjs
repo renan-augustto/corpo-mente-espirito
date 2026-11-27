@@ -94,3 +94,5 @@ export function replacePlan(state, plan, day = today()) {
   state.tasks.push(...plan.list.map(task => ({ ...task, start })));
   state.profile = { name: plan.name };
 }
+
+export function phase(state, day = today()){let a=dateObj(state.start),b=dateObj(day),d=Math.max(1,Math.round((Date.UTC(b.getFullYear(),b.getMonth(),b.getDate())-Date.UTC(a.getFullYear(),a.getMonth(),a.getDate()))/86400000)+1);return {d,title:d<=7?'Fundação':d<=21?'Estabilização':d<=45?'Reconstrução':d<=90?'Desenvolvimento':'Continuidade',text:d<=7?'Observar e estabelecer pequenas ações.':d<=21?'Recuperar energia e consistência.':d<=45?'Ampliar o que já funciona.':'Revisar prioridades sem aumentar a carga automaticamente.'}}

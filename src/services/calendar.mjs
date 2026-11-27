@@ -1,0 +1,6 @@
+import { pillars } from '../config/constants.mjs';
+import { today, shift, dateObj } from '../utils/dates.mjs';
+import { due } from '../models/routine.mjs';
+export function icsEscape(s){return String(s).replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/;/g,'\\;').replace(/,/g,'\\,')}
+export function fold(line){let out='',n=0;for(const c of line){let size=new TextEncoder().encode(c).length;if(n+size>75){out+='\r\n ';n=1}out+=c;n+=size}return out}
+export function buildCalendar(state){let lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Tres Pilares//Rotina//PT-BR','CALSCALE:GREGORIAN','METHOD:PUBLISH'],stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');for(let i=0;i<30;i++){let k=shift(today(),i);for(let t of due(state,k)){let dt=dateObj(k),[h,m]=t.time.split(':').map(Number);dt.setHours(h,m,0,0);let end=new Date(dt.getTime()+t.minutes*60000),utc=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');lines.push('BEGIN:VEVENT',`UID:${icsEscape(t.id)}-${k}@trespilares.local`,`DTSTAMP:${stamp}`,`DTSTART:${utc(dt)}`,`DTEND:${utc(end)}`,`SUMMARY:${icsEscape(pillars[t.pillar]+' | '+t.name)}`);if(t.reminder)lines.push('BEGIN:VALARM','TRIGGER:-PT5M','ACTION:DISPLAY','DESCRIPTION:'+icsEscape(t.name),'END:VALARM');lines.push('END:VEVENT')}}lines.push('END:VCALENDAR');return lines.map(fold).join('\r\n')+'\r\n'}
