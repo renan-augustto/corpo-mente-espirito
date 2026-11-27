@@ -118,6 +118,7 @@ test('journal opens today after browsing future routine and calendar dates', asy
   await page.getByRole('button', { name: 'Próximo dia' }).click();
   await expect(page.locator('#text')).toHaveValue('Registro de hoje');
   await nav(page, 'Calendário').click();
+  await expect(page.getByRole('heading', { name: 'Calendário', exact: true })).toBeVisible();
   const futureDay = page.locator(`[data-day="${future}"]`);
   if (!(await futureDay.count())) {
     await page.locator('[data-action="next-month"]').click();
