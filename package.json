@@ -1,0 +1,28 @@
+{
+  "name": "corpo-mente-espirito",
+  "version": "1.0.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "eslint app.js sw.js src tests scripts *.config.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:legacy": "node tests/logic.cjs",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "serve": "node scripts/serve.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@vitest/coverage-v8": "4.1.10",
+    "eslint": "^9.39.0",
+    "globals": "^16.5.0",
+    "prettier": "^3.6.2",
+    "vitest": "4.1.10"
+  },
+  "packageManager": "npm@11.21.3"
+}
