@@ -1,5 +1,7 @@
 # Orientações para desenvolvimento
+
 Leia docs/ROADMAP.md e as Issues antes de alterar o projeto. O proprietário aprova mudanças de escopo e promoção a produção.
+
 - Trabalhe em branch dedicada, commits pequenos, PR revisável. Não faça merge em main nem ative cobrança sem aprovação.
 - Issue #1/#3 são o escopo corrente. Funcionalidades futuras ficam em Issues, não em commits desta versão.
 - Preserve dados locais e compatibilidade de backups; teste regressões e informe explicitamente testes não executados.

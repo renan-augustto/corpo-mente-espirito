@@ -1,7 +1,9 @@
 # Hospedagem e homologação web — v1.0.1
 
 ## Configuração observada em 27/11/2026
+
 O proprietário confirmou pelas telas do Cloudflare Pages a integração GitHub e o primeiro deploy bem-sucedido da branch main.
+
 - Projeto: corpo-mente-espirito.
 - Produção Cloudflare: https://corpo-mente-espirito.pages.dev/
 - Origem legada GitHub Pages: https://renan-augustto.github.io/corpo-mente-espirito/ (preservar enquanto houver dados locais a migrar).
@@ -15,6 +17,7 @@ mkdir -p dist && cp index.html app.js style.css manifest.webmanifest sw.js dist/
 ```
 
 ## Homologação
+
 A PR #23 usa refactor/mvc-v1.0.1-phase2. Um novo commit nessa branch deve acionar o preview. A URL exata e o resultado do deploy devem ser confirmados no painel Deployments ou no status GitHub. Este documento não comprova que o preview já foi publicado.
 O preview de branch tem origem distinta da produção; verificar que armazenamento local, cache e rotinas de teste ficam isolados. Não usar dados pessoais em previews. Pré-visualizações podem ser públicas mesmo se o repositório for privado; restringir acesso antes de usar conteúdo sensível. Não confundir sucesso de build com aprovação dos testes.
 Manter PR em Draft até CI e validação técnica; homologar apenas candidato identificado por SHA, preferencialmente URL imutável do deploy. Registrar evidências e aceite em #22 e retestes de #1.

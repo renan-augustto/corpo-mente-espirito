@@ -3,44 +3,98 @@ import { today, dateObj, uid, hh, validDate, shift } from '../utils/dates.mjs';
 
 // Version 1 persistence contract: do not change without an explicit migration.
 export function fresh() {
-  return { version: 1, profile: null, start: today(), tasks: [], done: {}, journal: {}, reminders: false, notified: {} };
+  return {
+    version: 1,
+    profile: null,
+    start: today(),
+    tasks: [],
+    done: {},
+    journal: {},
+    reminders: false,
+    notified: {},
+  };
 }
 
 export function validTask(t) {
-  return t && typeof t.id === 'string' && t.id.length < 100
-    && typeof t.name === 'string' && t.name.trim() && t.name.length <= 150
-    && Object.hasOwn(pillars, t.pillar) && hh.test(t.time)
-    && Number.isInteger(t.minutes) && t.minutes >= 1 && t.minutes <= 720
-    && Array.isArray(t.days) && t.days.length > 0
-    && t.days.every(d => Number.isInteger(d) && d >= 0 && d <= 6)
-    && validDate(t.start) && (!t.end || validDate(t.end) && t.end >= t.start);
+  return (
+    t &&
+    typeof t.id === 'string' &&
+    t.id.length < 100 &&
+    typeof t.name === 'string' &&
+    t.name.trim() &&
+    t.name.length <= 150 &&
+    Object.hasOwn(pillars, t.pillar) &&
+    hh.test(t.time) &&
+    Number.isInteger(t.minutes) &&
+    t.minutes >= 1 &&
+    t.minutes <= 720 &&
+    Array.isArray(t.days) &&
+    t.days.length > 0 &&
+    t.days.every((d) => Number.isInteger(d) && d >= 0 && d <= 6) &&
+    validDate(t.start) &&
+    (!t.end || (validDate(t.end) && t.end >= t.start))
+  );
 }
 
 export function validate(s) {
-  if (!s || s.version !== 1 || !validDate(s.start)
-    || !Array.isArray(s.tasks) || s.tasks.length > 2000
-    || !s.tasks.every(validTask) || new Set(s.tasks.map(t => t.id)).size !== s.tasks.length
-    || !s.done || typeof s.done !== 'object' || Array.isArray(s.done)
-    || !s.journal || typeof s.journal !== 'object' || Array.isArray(s.journal)
-    || !Object.entries(s.done).every(([k, v]) => validDate(k) && Array.isArray(v) && v.every(x => typeof x === 'string'))
-    || !Object.entries(s.journal).every(([k, v]) => validDate(k) && v && typeof v === 'object'
-      && ['energy', 'mood', 'focus'].every(x => Number.isFinite(v[x]) && v[x] >= 0 && v[x] <= 10)
-      && Number.isFinite(v.sleep) && v.sleep >= 0 && v.sleep <= 24
-      && ['text', 'next'].every(x => typeof v[x] === 'string' && v[x].length <= 10000))
-    || !(s.profile === null || s.profile && typeof s.profile.name === 'string' && s.profile.name.length <= 60)) {
+  if (
+    !s ||
+    s.version !== 1 ||
+    !validDate(s.start) ||
+    !Array.isArray(s.tasks) ||
+    s.tasks.length > 2000 ||
+    !s.tasks.every(validTask) ||
+    new Set(s.tasks.map((t) => t.id)).size !== s.tasks.length ||
+    !s.done ||
+    typeof s.done !== 'object' ||
+    Array.isArray(s.done) ||
+    !s.journal ||
+    typeof s.journal !== 'object' ||
+    Array.isArray(s.journal) ||
+    !Object.entries(s.done).every(
+      ([k, v]) => validDate(k) && Array.isArray(v) && v.every((x) => typeof x === 'string'),
+    ) ||
+    !Object.entries(s.journal).every(
+      ([k, v]) =>
+        validDate(k) &&
+        v &&
+        typeof v === 'object' &&
+        ['energy', 'mood', 'focus'].every(
+          (x) => Number.isFinite(v[x]) && v[x] >= 0 && v[x] <= 10,
+        ) &&
+        Number.isFinite(v.sleep) &&
+        v.sleep >= 0 &&
+        v.sleep <= 24 &&
+        ['text', 'next'].every((x) => typeof v[x] === 'string' && v[x].length <= 10000),
+    ) ||
+    !(
+      s.profile === null ||
+      (s.profile && typeof s.profile.name === 'string' && s.profile.name.length <= 60)
+    )
+  ) {
     throw Error('Arquivo incompatível ou inválido.');
   }
   return { ...s, reminders: !!s.reminders, notified: {} };
 }
 
 export function task(name, pillar, time, minutes, days = all, start = today()) {
-  return { id: uid(), name, pillar, time, minutes, days: [...days], start, end: null, reminder: true };
+  return {
+    id: uid(),
+    name,
+    pillar,
+    time,
+    minutes,
+    days: [...days],
+    start,
+    end: null,
+    reminder: true,
+  };
 }
 
 export function due(state, key) {
   const weekday = dateObj(key).getDay();
   return state.tasks
-    .filter(t => t.start <= key && (!t.end || key <= t.end) && t.days.includes(weekday))
+    .filter((t) => t.start <= key && (!t.end || key <= t.end) && t.days.includes(weekday))
     .sort((a, b) => a.time.localeCompare(b.time) || a.name.localeCompare(b.name));
 }
 
@@ -49,11 +103,11 @@ export function isDone(state, task, key) {
 }
 
 export function stat(state, key, pillar) {
-  const tasks = due(state, key).filter(t => !pillar || t.pillar === pillar);
-  return { n: tasks.length, d: tasks.filter(t => isDone(state, t, key)).length };
+  const tasks = due(state, key).filter((t) => !pillar || t.pillar === pillar);
+  return { n: tasks.length, d: tasks.filter((t) => isDone(state, t, key)).length };
 }
 
-export const percentage = stat => stat.n ? Math.round(100 * stat.d / stat.n) : 0;
+export const percentage = (stat) => (stat.n ? Math.round((100 * stat.d) / stat.n) : 0);
 
 // Closed occurrences remain in history. Changes never duplicate a completed day.
 export function isActive(task, day = today()) {
@@ -62,10 +116,10 @@ export function isActive(task, day = today()) {
 
 export function retire(state, task, day = today()) {
   if (!isActive(task, day)) return;
-  if (due(state, day).some(t => t.id === task.id) && isDone(state, task, day)) {
+  if (due(state, day).some((t) => t.id === task.id) && isDone(state, task, day)) {
     task.end = day;
   } else if (task.start >= day) {
-    state.tasks = state.tasks.filter(t => t.id !== task.id);
+    state.tasks = state.tasks.filter((t) => t.id !== task.id);
   } else {
     task.end = shift(day, -1);
   }
@@ -77,7 +131,8 @@ export function replaceTask(state, previous, next, day = today()) {
     return;
   }
   if (!isActive(previous, day)) return;
-  const completed = due(state, day).some(t => t.id === previous.id) && isDone(state, previous, day);
+  const completed =
+    due(state, day).some((t) => t.id === previous.id) && isDone(state, previous, day);
   if (!completed && previous.start >= day) {
     Object.assign(previous, next, { id: previous.id, start: previous.start });
     return;
@@ -89,10 +144,42 @@ export function replaceTask(state, previous, next, day = today()) {
 // Once any task has been completed today, start a replacement plan tomorrow.
 // This keeps completed occurrences visible and avoids counting replacement tasks twice.
 export function replacePlan(state, plan, day = today()) {
-  const start = due(state, day).some(t => isDone(state, t, day)) ? shift(day, 1) : day;
+  const start = due(state, day).some((t) => isDone(state, t, day)) ? shift(day, 1) : day;
   for (const task of [...state.tasks]) retire(state, task, day);
-  state.tasks.push(...plan.list.map(task => ({ ...task, start })));
+  state.tasks.push(...plan.list.map((task) => ({ ...task, start })));
   state.profile = { name: plan.name };
 }
 
-export function phase(state, day = today()){let a=dateObj(state.start),b=dateObj(day),d=Math.max(1,Math.round((Date.UTC(b.getFullYear(),b.getMonth(),b.getDate())-Date.UTC(a.getFullYear(),a.getMonth(),a.getDate()))/86400000)+1);return {d,title:d<=7?'Fundação':d<=21?'Estabilização':d<=45?'Reconstrução':d<=90?'Desenvolvimento':'Continuidade',text:d<=7?'Observar e estabelecer pequenas ações.':d<=21?'Recuperar energia e consistência.':d<=45?'Ampliar o que já funciona.':'Revisar prioridades sem aumentar a carga automaticamente.'}}
+export function phase(state, day = today()) {
+  let a = dateObj(state.start),
+    b = dateObj(day),
+    d = Math.max(
+      1,
+      Math.round(
+        (Date.UTC(b.getFullYear(), b.getMonth(), b.getDate()) -
+          Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())) /
+          86400000,
+      ) + 1,
+    );
+  return {
+    d,
+    title:
+      d <= 7
+        ? 'Fundação'
+        : d <= 21
+          ? 'Estabilização'
+          : d <= 45
+            ? 'Reconstrução'
+            : d <= 90
+              ? 'Desenvolvimento'
+              : 'Continuidade',
+    text:
+      d <= 7
+        ? 'Observar e estabelecer pequenas ações.'
+        : d <= 21
+          ? 'Recuperar energia e consistência.'
+          : d <= 45
+            ? 'Ampliar o que já funciona.'
+            : 'Revisar prioridades sem aumentar a carga automaticamente.',
+  };
+}

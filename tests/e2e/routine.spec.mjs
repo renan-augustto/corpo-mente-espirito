@@ -10,8 +10,8 @@ const createTask = async (page, name) => {
 
 test('onboarding, completion, journal, backup, ICS and offline', async ({ page, context }) => {
   const errors = [];
-  page.on('pageerror', e => errors.push(e.message));
-  page.on('dialog', dialog => dialog.accept());
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('dialog', (dialog) => dialog.accept());
   await page.goto('/');
   await page.getByRole('button', { name: 'Criar minha rotina' }).click();
   await page.locator('#qn').fill('Teste');
@@ -33,10 +33,16 @@ test('onboarding, completion, journal, backup, ICS and offline', async ({ page, 
   await nav(page, 'Evolução').click();
   await expect(page.getByText('7,5', { exact: true })).toBeVisible();
   await nav(page, 'Calendário').click();
-  const [ics] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Exportar 30 dias' }).click()]);
+  const [ics] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Exportar 30 dias' }).click(),
+  ]);
   expect(await readFile(await ics.path(), 'utf8')).toContain('BEGIN:VEVENT');
   await nav(page, 'Ajustes').click();
-  const [backup] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Exportar backup' }).click()]);
+  const [backup] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Exportar backup' }).click(),
+  ]);
   const data = JSON.parse(await readFile(await backup.path(), 'utf8'));
   expect(data.profile.name).toBe('Teste');
   expect(Object.keys(data.journal)).toHaveLength(1);
@@ -50,7 +56,9 @@ test('onboarding, completion, journal, backup, ICS and offline', async ({ page, 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Olá, Teste' })).toBeVisible();
   await context.setOffline(false);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
   expect(errors).toEqual([]);
 });
 

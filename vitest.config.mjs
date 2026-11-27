@@ -6,7 +6,13 @@ export default defineConfig({
     environment: 'node',
     coverage: {
       provider: 'v8',
-      include: ['src/models/**/*.mjs', 'src/utils/**/*.mjs', 'src/services/storage.mjs', 'src/services/calendar.mjs', 'src/views/html.mjs'],
+      include: [
+        'src/models/**/*.mjs',
+        'src/utils/**/*.mjs',
+        'src/services/storage.mjs',
+        'src/services/calendar.mjs',
+        'src/views/html.mjs',
+      ],
       reporter: ['text', 'html', 'json-summary'],
     },
   },

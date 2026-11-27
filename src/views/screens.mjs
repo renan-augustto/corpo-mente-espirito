@@ -1,25 +1,257 @@
 import { pillars, weekdays } from '../config/constants.mjs';
 import { dateKey, dateObj, today, shift, fmt } from '../utils/dates.mjs';
-import { task, due as modelDue, isDone as modelIsDone, stat as modelStat, percentage, isActive, phase } from '../models/routine.mjs';
+import {
+  task,
+  due as modelDue,
+  isDone as modelIsDone,
+  stat as modelStat,
+  percentage,
+  isActive,
+  phase,
+} from '../models/routine.mjs';
 import { esc, ico, btn, heading } from './html.mjs';
 
 // Presentation reads controller state through explicit dependencies, without mutating it.
 export function createViews({ getState, getSelected, getMonth }) {
-  const due = k => modelDue(getState(), k);
+  const due = (k) => modelDue(getState(), k);
   const isDone = (t, k) => modelIsDone(getState(), t, k);
   const stat = (k, p) => modelStat(getState(), k, p);
-function dateNav(){const selected=getSelected();return `<div class="row spread"><div class="row">${btn('','prev-day','icon-btn','left')}<label><span class="hidden">Data</span><input type="date" id="selected-date" value="${selected}"></label>${btn('','next-day','icon-btn','right')}</div>${btn('Hoje','today')}</div>`}
-function taskRows(k,edit=true){let ts=due(k);return ts.length?ts.map(t=>`<div class="task pillar ${t.pillar} ${isDone(t,k)?'done':''}"><input type="checkbox" aria-label="Concluir ${esc(t.name)}" data-toggle="${esc(t.id)}" data-date="${k}" ${isDone(t,k)?'checked':''} ${k>today()?'disabled':''}><span class="pillar-icon" title="${pillars[t.pillar]}">${ico(t.pillar)}</span><div><div class="task-name">${esc(t.name)}</div><div class="task-meta">${t.time} · ${t.minutes} min · ${pillars[t.pillar]}${t.reminder?' · lembrete':''}</div></div>${edit&&(isActive(t))?`<div class="task-actions"><button class="icon-btn" title="Editar ${esc(t.name)}" aria-label="Editar ${esc(t.name)}" data-edit="${esc(t.id)}">${ico('edit')}</button><button class="icon-btn danger" title="Encerrar tarefa" aria-label="Encerrar ${esc(t.name)}" data-delete="${esc(t.id)}">${ico('trash')}</button></div>`:''}</div>`).join(''):'<div class="empty">Nenhuma atividade planejada para este dia.</div>'}
-function pillarCards(k){return `<div class="grid3">${Object.keys(pillars).map(p=>{let s=stat(k,p);return `<section class="card pillar ${p}"><div class="pillar-label">${ico(p)} ${pillars[p]}</div><div class="metric">${s.d}<small style="font-size:14px"> / ${s.n}</small></div><div class="progress"><i style="width:${percentage(s)}%"></i></div><small>${s.n?percentage(s)+'% das tarefas':'Sem tarefas'}</small></section>`}).join('')}</div>`}
-function bars(){let dates=Array.from({length:7},(_,i)=>shift(today(),i-6));return `<div class="bargrid">${dates.map(k=>`<div><div class="bars">${Object.keys(pillars).map(p=>{let s=stat(k,p);return `<i class="pillar ${p}" style="height:${percentage(s)}%" title="${pillars[p]}: ${s.d}/${s.n}"></i>`}).join('')}</div><small>${weekdays[dateObj(k).getDay()]} ${k.slice(8)}</small></div>`).join('')}</div><div class="row" style="margin-top:12px">${Object.keys(pillars).map(p=>`<span class="pillar-label pillar ${p}">${ico(p)}<small>${pillars[p]}</small></span>`).join('')}</div>`}
-function dashboard(){const state=getState();let p=phase(state),s=stat(today());return heading(state.profile?.name?`Olá, ${esc(state.profile.name)}`:'Sua jornada começa aqui','Pequenas ações. Mudanças sustentáveis.',btn('Nova tarefa','new','primary','plus'))+`<div class="stack">${!state.profile?`<section class="card"><h2>Monte uma rotina que caiba na sua vida</h2><p>Responda a um questionário curto ou comece do zero. Suas respostas e registros ficam neste navegador.</p><div class="row">${btn('Criar minha rotina','question','primary')}${btn('Começar do zero','blank')}</div></section>`:''}<section class="card phase"><div class="row spread"><div><div class="eyebrow">Dia ${p.d} · Jornada de 90 dias</div><h2>${p.title}</h2><p>${p.text}</p></div><span class="tag">Ritmo flexível</span></div></section>${pillarCards(today())}<div class="grid2"><section class="card"><div class="row spread"><h2>Atividades de hoje</h2><span class="tag">${s.d}/${s.n}</span></div>${taskRows(today(),false)}<p><a href="#rotina">Ver rotina completa →</a></p></section><div class="stack"><section class="card"><h2>Últimos 7 dias</h2><p>Conclusão das tarefas planejadas</p>${bars()}</section><section class="card"><h2>Seu momento</h2><p>${state.journal[today()]?'Diário de hoje registrado. Você pode revisá-lo.':'Como você está se sentindo hoje? Registre sem julgamento.'}</p>${btn('Abrir diário','open-journal','primary','book')}</section></div></div><p class="footnote">Os indicadores medem atividades registradas, não saúde, felicidade ou valor pessoal.</p></div>`}
-function routine(){const state=getState();const selected=getSelected();return heading('Minha rotina','Planeje ações possíveis, sem transformar descanso em prêmio.',btn('Nova tarefa','new','primary','plus'))+`<div class="stack"><section class="card">${dateNav()}${taskRows(selected)}</section><section class="card"><h2>Modelos de tarefas</h2><p>Edite horários e dias de repetição. Alterações a partir de hoje preservam os registros anteriores.</p>${state.tasks.filter(t=>isActive(t)).length?state.tasks.filter(t=>isActive(t)).map(t=>`<div class="task pillar ${t.pillar}" style="grid-template-columns:38px minmax(0,1fr) auto"><span class="pillar-icon">${ico(t.pillar)}</span><div><div class="task-name">${esc(t.name)}</div><div class="task-meta">${t.time} · ${t.days.map(d=>weekdays[d]).join(', ')}</div></div><div class="task-actions"><button class="icon-btn" aria-label="Editar ${esc(t.name)}" data-edit="${esc(t.id)}">${ico('edit')}</button><button class="icon-btn danger" aria-label="Encerrar ${esc(t.name)}" data-delete="${esc(t.id)}">${ico('trash')}</button></div></div>`).join(''):'<p>Nenhuma tarefa ativa.</p>'}</section></div>`}
-function calendar(){const selected=getSelected();const month=getMonth();let y=month.getFullYear(),m=month.getMonth(),first=new Date(y,m,1).getDay(),count=new Date(y,m+1,0).getDate();return heading('Calendário','Veja sua agenda e envie lembretes ao seu calendário.',btn('Exportar 30 dias','ics','','download'))+`<div class="grid2"><section class="card"><div class="row spread">${btn('','prev-month','icon-btn','left')}<h2>${month.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</h2>${btn('','next-month','icon-btn','right')}</div><div class="daygrid">${weekdays.map(d=>`<div class="weekday">${d}</div>`).join('')}${'<div></div>'.repeat(first)}${Array.from({length:count},(_,i)=>{let k=dateKey(new Date(y,m,i+1)),ps=[...new Set(due(k).map(t=>t.pillar))];return `<button class="${k===selected?'selected':''} ${k===today()?'today':''}" data-day="${k}" aria-label="${fmt(k)}, ${due(k).length} tarefas">${i+1}<span class="dots">${ps.map(p=>`<i class="pillar ${p}"></i>`).join('')}</span></button>`}).join('')}</div></section><section class="card"><h2>${fmt(selected)}</h2>${taskRows(selected)}<p class="footnote">O arquivo ICS inclui eventos individuais e alarmes. Seu calendário decide se importará e exibirá os alertas; novas alterações exigem nova exportação.</p></section></div>`}
-function journal(){const state=getState();const selected=getSelected();let j=state.journal[selected]||{sleep:'',energy:5,mood:5,focus:5,text:'',next:''};return heading('Diário pessoal','Um espaço privado para observar sua experiência.')+`<div class="grid2"><section class="card">${dateNav()}<form id="journal-form"><div class="field"><label for="sleep">Horas de sono no total</label><input id="sleep" name="sleep" type="number" min="0" max="24" step="0.25" required value="${j.sleep}" placeholder="Ex.: 7.5"></div>${[['energy','Energia'],['mood','Estado emocional'],['focus','Concentração']].map(([k,l])=>`<div class="field"><label for="${k}">${l} (0–10) · <output id="${k}-out">${j[k]}</output></label><input type="range" id="${k}" name="${k}" min="0" max="10" value="${j[k]}" data-range="${k}"></div>`).join('')}<div class="field"><label for="text">O que aconteceu? O que aprendi e senti?</label><textarea id="text" name="text" maxlength="10000">${esc(j.text)}</textarea></div><div class="field"><label for="next">Uma pequena ação sob meu controle amanhã</label><textarea id="next" name="next" maxlength="10000">${esc(j.next)}</textarea></div><button class="primary" type="submit" ${selected>today()?'disabled':''}>Salvar registro</button></form></section><section class="card"><h2>Registros recentes</h2>${Object.entries(state.journal).sort(([a],[b])=>b.localeCompare(a)).slice(0,14).map(([k,v])=>`<div class="journal-entry"><div class="row spread"><strong>${fmt(k)}</strong><button data-journal="${k}" class="icon-btn" aria-label="Abrir registro">${ico('edit')}</button></div><small>Sono ${v.sleep}h · Energia ${v.energy}/10 · Humor ${v.mood}/10</small><p>${esc(v.text)}</p><p>${esc(v.next)}</p></div>`).join('')||'<p>Seus registros aparecerão aqui.</p>'}</section></div>`}
-function evolution(){const state=getState();let dates=Array.from({length:7},(_,i)=>shift(today(),i-6)),js=dates.map(k=>state.journal[k]).filter(Boolean);return heading('Minha evolução','Compare registros reais, sem notas sobre seu valor pessoal.')+`<div class="stack"><section class="card"><h2>Últimos 7 dias · tarefas realizadas</h2>${bars()}<div class="grid3" style="margin-top:18px">${Object.keys(pillars).map(p=>{let s=dates.reduce((a,k)=>{let b=stat(k,p);return {n:a.n+b.n,d:a.d+b.d}},{n:0,d:0});return `<div class="pillar ${p}"><div class="pillar-label">${ico(p)}${pillars[p]}</div><div class="metric">${s.d}/${s.n}</div><small>${s.n?percentage(s)+'% das planejadas':'Sem tarefas'}</small></div>`}).join('')}</div></section><section class="card"><h2>Últimos 7 dias · autorrelatos</h2><p>${js.length} de 7 dias registrados</p>${js.length?`<div class="grid2">${[['sleep','Sono (h)'],['energy','Energia (/10)'],['mood','Estado emocional (/10)'],['focus','Concentração (/10)']].map(([k,l])=>`<div><small>${l} · média dos dias registrados</small><div class="metric">${(js.reduce((a,j)=>a+j[k],0)/js.length).toFixed(1).replace('.',',')}</div></div>`).join('')}</div>`:'<p>Sem registros ainda.</p>'}</section><section class="card"><h2>Revisão semanal</h2><p>O que funcionou? O que atrapalhou? Qual atividade posso tornar menor? Que mudança precisa de ajuda externa?</p>${btn('Refletir no diário','open-journal','primary')}</section></div>`}
-function settings(){const state=getState();return heading('Ajustes','Controle seus dados, sua rotina e seus lembretes.')+`<div class="stack"><section class="card"><h2>Personalização</h2><p>Recriar o plano preserva tarefas concluídas; se já concluiu alguma hoje, o novo plano começa amanhã. O questionário não faz diagnóstico.</p>${btn('Responder questionário','question','primary')}${' '}${btn('Alterar nome','profile')}</section><section class="card"><h2>Notificações e instalação</h2><p>Lembretes são verificados enquanto a página está aberta e ativa. Navegadores podem suspender a aba; não há push em segundo plano nem garantia de alarme com o app fechado.</p><label class="checkline"><input type="checkbox" id="reminders" ${state.reminders?'checked':''}> Ativar lembretes no aplicativo</label><div class="row">${btn('Permitir notificações','permission','','bell')}${btn('Instalar aplicativo','install')}${btn('Exportar calendário','ics','','download')}</div><p class="footnote">No iPhone: Safari → Compartilhar → Adicionar à Tela de Início. No Android/desktop, use o menu de instalação do navegador.</p></section><section class="card"><h2>Dados e privacidade</h2><p>Não há conta nem servidor de dados. Registros ficam no armazenamento local deste navegador, sem criptografia adicional ou sincronização. Não use em dispositivo compartilhado sem proteção. A limpeza dos dados do navegador pode apagar seu histórico.</p><div class="row">${btn('Exportar backup','backup','','download')}<label><input type="file" accept=".json,application/json" id="import" class="hidden"><button type="button" data-action="import">Importar backup ou rotina</button></label>${btn('Apagar todos os dados','reset','danger')}</div></section><section class="card"><h2>Sobre o plano</h2><p>Fundação (1–7), Estabilização (8–21), Reconstrução (22–45) e Desenvolvimento (46–90). Ajuste a carga conforme seu contexto, não automaticamente.</p><p>Este aplicativo não substitui orientação médica, psicológica ou financeira. Cansaço persistente ou sofrimento emocional merecem avaliação profissional.</p></section></div>`}
-function taskDialog(id){const state=getState();const selected=getSelected();let t=state.tasks.find(x=>x.id===id)||task('','body','09:00',15);return {title:id?'Editar tarefa':'Nova tarefa',body:`<form id="task-form" data-id="${id?esc(id):''}"><div class="field"><label for="tn">Nome da tarefa</label><input id="tn" name="name" required maxlength="150" value="${esc(t.name)}"></div><div class="field"><label for="tp">Pilar</label><select id="tp" name="pillar">${Object.entries(pillars).map(([k,v])=>`<option value="${k}" ${k===t.pillar?'selected':''}>${v}</option>`).join('')}</select></div><div class="grid2"><div class="field"><label for="tt">Horário</label><input id="tt" name="time" type="time" required value="${t.time}"></div><div class="field"><label for="tm">Duração (min)</label><input id="tm" name="minutes" type="number" required min="1" max="720" value="${t.minutes}"></div></div><fieldset><legend>Repetir nos dias</legend><div class="days">${weekdays.map((d,i)=>`<label><input type="checkbox" name="days" value="${i}" ${t.days.includes(i)?'checked':''}>${d}</label>`).join('')}</div></fieldset><label class="checkline"><input type="checkbox" name="reminder" ${t.reminder?'checked':''}> Lembrete no horário</label><p class="footnote">Alterações valem a partir de hoje; tarefas já concluídas hoje mantêm o registro e a edição vale a partir de amanhã.</p><button type="submit" class="primary">Salvar tarefa</button></form>`}}
-function question(){const state=getState();const selected=getSelected();return {title:'Sua rotina, seu contexto',body:`<form id="question-form"><p>Respostas opcionais. O plano é uma sugestão baseada em regras simples, não uma avaliação clínica. Nenhuma resposta é enviada para um servidor.</p><div class="field"><label for="qn">Como quer ser chamado?</label><input name="name" id="qn" maxlength="60" value="${esc(state.profile?.name||'')}"></div><div class="grid2"><div class="field"><label for="qw">Horário habitual de levantar</label><input id="qw" name="wake" type="time" value="08:00" required></div><div class="field"><label for="qb">Horário desejado de dormir</label><input id="qb" name="bed" type="time" value="23:00" required></div></div><div class="field"><label for="qa">Tempo disponível por dia para novos hábitos</label><select id="qa" name="available"><option value="20">20 minutos</option><option value="45" selected>45 minutos</option><option value="90">90 minutos</option><option value="150">150 minutos</option></select></div><div class="field"><label for="qe">Energia atual (autorrelato)</label><select id="qe" name="energy"><option value="low">Baixa</option><option value="medium" selected>Moderada</option><option value="high">Boa</option></select></div><fieldset><legend>Prioridades (escolha as que fazem sentido)</legend>${[['job','Recolocação profissional'],['study','Estudo e aprendizado'],['finance','Organização financeira'],['exercise','Atividade física'],['read','Leitura e reflexão'],['social','Relacionamentos e amizades'],['project','Projetos pessoais']].map(([k,l])=>`<label class="checkline"><input type="checkbox" name="goals" value="${k}" ${['study','exercise','read'].includes(k)?'checked':''}>${l}</label>`).join('')}</fieldset><div class="field"><label for="qo">Compromissos ou restrições (opcional, não salvo)</label><textarea id="qo" name="context" placeholder="Ex.: trabalho à noite, horários de cuidado, falta de academia"></textarea><small>Use essas informações para revisar os horários sugeridos. O texto livre não é interpretado automaticamente.</small></div><button class="primary" type="submit">Pré-visualizar plano</button></form>`}}
-function preview(pendingPlan){return {title:'Seu plano inicial',body:`<p>Revise os horários. As tarefas respeitam um orçamento aproximado de tempo, com cinco minutos adicionais para preparar o sono. Você pode mudar tudo depois.</p><div>${pendingPlan.list.map(t=>`<div class="task pillar ${t.pillar}" style="grid-template-columns:38px 1fr"><span class="pillar-icon">${ico(t.pillar)}</span><div><strong>${esc(t.name)}</strong><div class="task-meta">${t.time} · ${t.minutes} min · ${t.days.map(d=>weekdays[d]).join(', ')}</div></div></div>`).join('')}</div><p class="notice">Confira se o plano não conflita com compromissos, descanso ou saúde. Caso esteja muito cansado, diminua a carga e procure avaliação profissional se persistir.</p><div class="row">${btn('Aplicar plano','apply-plan','primary')}${btn('Voltar','question')}</div>`}}
-  return { dashboard, routine, calendar, journal, evolution, settings, taskDialog, question, preview };
+  function dateNav() {
+    const selected = getSelected();
+    return `<div class="row spread"><div class="row">${btn('', 'prev-day', 'icon-btn', 'left')}<label><span class="hidden">Data</span><input type="date" id="selected-date" value="${selected}"></label>${btn('', 'next-day', 'icon-btn', 'right')}</div>${btn('Hoje', 'today')}</div>`;
+  }
+  function taskRows(k, edit = true) {
+    let ts = due(k);
+    return ts.length
+      ? ts
+          .map(
+            (t) =>
+              `<div class="task pillar ${t.pillar} ${isDone(t, k) ? 'done' : ''}"><input type="checkbox" aria-label="Concluir ${esc(t.name)}" data-toggle="${esc(t.id)}" data-date="${k}" ${isDone(t, k) ? 'checked' : ''} ${k > today() ? 'disabled' : ''}><span class="pillar-icon" title="${pillars[t.pillar]}">${ico(t.pillar)}</span><div><div class="task-name">${esc(t.name)}</div><div class="task-meta">${t.time} · ${t.minutes} min · ${pillars[t.pillar]}${t.reminder ? ' · lembrete' : ''}</div></div>${edit && isActive(t) ? `<div class="task-actions"><button class="icon-btn" title="Editar ${esc(t.name)}" aria-label="Editar ${esc(t.name)}" data-edit="${esc(t.id)}">${ico('edit')}</button><button class="icon-btn danger" title="Encerrar tarefa" aria-label="Encerrar ${esc(t.name)}" data-delete="${esc(t.id)}">${ico('trash')}</button></div>` : ''}</div>`,
+          )
+          .join('')
+      : '<div class="empty">Nenhuma atividade planejada para este dia.</div>';
+  }
+  function pillarCards(k) {
+    return `<div class="grid3">${Object.keys(pillars)
+      .map((p) => {
+        let s = stat(k, p);
+        return `<section class="card pillar ${p}"><div class="pillar-label">${ico(p)} ${pillars[p]}</div><div class="metric">${s.d}<small style="font-size:14px"> / ${s.n}</small></div><div class="progress"><i style="width:${percentage(s)}%"></i></div><small>${s.n ? percentage(s) + '% das tarefas' : 'Sem tarefas'}</small></section>`;
+      })
+      .join('')}</div>`;
+  }
+  function bars() {
+    let dates = Array.from({ length: 7 }, (_, i) => shift(today(), i - 6));
+    return `<div class="bargrid">${dates
+      .map(
+        (k) =>
+          `<div><div class="bars">${Object.keys(pillars)
+            .map((p) => {
+              let s = stat(k, p);
+              return `<i class="pillar ${p}" style="height:${percentage(s)}%" title="${pillars[p]}: ${s.d}/${s.n}"></i>`;
+            })
+            .join('')}</div><small>${weekdays[dateObj(k).getDay()]} ${k.slice(8)}</small></div>`,
+      )
+      .join('')}</div><div class="row" style="margin-top:12px">${Object.keys(pillars)
+      .map(
+        (p) =>
+          `<span class="pillar-label pillar ${p}">${ico(p)}<small>${pillars[p]}</small></span>`,
+      )
+      .join('')}</div>`;
+  }
+  function dashboard() {
+    const state = getState();
+    let p = phase(state),
+      s = stat(today());
+    return (
+      heading(
+        state.profile?.name ? `Olá, ${esc(state.profile.name)}` : 'Sua jornada começa aqui',
+        'Pequenas ações. Mudanças sustentáveis.',
+        btn('Nova tarefa', 'new', 'primary', 'plus'),
+      ) +
+      `<div class="stack">${!state.profile ? `<section class="card"><h2>Monte uma rotina que caiba na sua vida</h2><p>Responda a um questionário curto ou comece do zero. Suas respostas e registros ficam neste navegador.</p><div class="row">${btn('Criar minha rotina', 'question', 'primary')}${btn('Começar do zero', 'blank')}</div></section>` : ''}<section class="card phase"><div class="row spread"><div><div class="eyebrow">Dia ${p.d} · Jornada de 90 dias</div><h2>${p.title}</h2><p>${p.text}</p></div><span class="tag">Ritmo flexível</span></div></section>${pillarCards(today())}<div class="grid2"><section class="card"><div class="row spread"><h2>Atividades de hoje</h2><span class="tag">${s.d}/${s.n}</span></div>${taskRows(today(), false)}<p><a href="#rotina">Ver rotina completa →</a></p></section><div class="stack"><section class="card"><h2>Últimos 7 dias</h2><p>Conclusão das tarefas planejadas</p>${bars()}</section><section class="card"><h2>Seu momento</h2><p>${state.journal[today()] ? 'Diário de hoje registrado. Você pode revisá-lo.' : 'Como você está se sentindo hoje? Registre sem julgamento.'}</p>${btn('Abrir diário', 'open-journal', 'primary', 'book')}</section></div></div><p class="footnote">Os indicadores medem atividades registradas, não saúde, felicidade ou valor pessoal.</p></div>`
+    );
+  }
+  function routine() {
+    const state = getState();
+    const selected = getSelected();
+    return (
+      heading(
+        'Minha rotina',
+        'Planeje ações possíveis, sem transformar descanso em prêmio.',
+        btn('Nova tarefa', 'new', 'primary', 'plus'),
+      ) +
+      `<div class="stack"><section class="card">${dateNav()}${taskRows(selected)}</section><section class="card"><h2>Modelos de tarefas</h2><p>Edite horários e dias de repetição. Alterações a partir de hoje preservam os registros anteriores.</p>${
+        state.tasks.filter((t) => isActive(t)).length
+          ? state.tasks
+              .filter((t) => isActive(t))
+              .map(
+                (t) =>
+                  `<div class="task pillar ${t.pillar}" style="grid-template-columns:38px minmax(0,1fr) auto"><span class="pillar-icon">${ico(t.pillar)}</span><div><div class="task-name">${esc(t.name)}</div><div class="task-meta">${t.time} · ${t.days.map((d) => weekdays[d]).join(', ')}</div></div><div class="task-actions"><button class="icon-btn" aria-label="Editar ${esc(t.name)}" data-edit="${esc(t.id)}">${ico('edit')}</button><button class="icon-btn danger" aria-label="Encerrar ${esc(t.name)}" data-delete="${esc(t.id)}">${ico('trash')}</button></div></div>`,
+              )
+              .join('')
+          : '<p>Nenhuma tarefa ativa.</p>'
+      }</section></div>`
+    );
+  }
+  function calendar() {
+    const selected = getSelected();
+    const month = getMonth();
+    let y = month.getFullYear(),
+      m = month.getMonth(),
+      first = new Date(y, m, 1).getDay(),
+      count = new Date(y, m + 1, 0).getDate();
+    return (
+      heading(
+        'Calendário',
+        'Veja sua agenda e envie lembretes ao seu calendário.',
+        btn('Exportar 30 dias', 'ics', '', 'download'),
+      ) +
+      `<div class="grid2"><section class="card"><div class="row spread">${btn('', 'prev-month', 'icon-btn', 'left')}<h2>${month.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</h2>${btn('', 'next-month', 'icon-btn', 'right')}</div><div class="daygrid">${weekdays.map((d) => `<div class="weekday">${d}</div>`).join('')}${'<div></div>'.repeat(first)}${Array.from(
+        { length: count },
+        (_, i) => {
+          let k = dateKey(new Date(y, m, i + 1)),
+            ps = [...new Set(due(k).map((t) => t.pillar))];
+          return `<button class="${k === selected ? 'selected' : ''} ${k === today() ? 'today' : ''}" data-day="${k}" aria-label="${fmt(k)}, ${due(k).length} tarefas">${i + 1}<span class="dots">${ps.map((p) => `<i class="pillar ${p}"></i>`).join('')}</span></button>`;
+        },
+      ).join(
+        '',
+      )}</div></section><section class="card"><h2>${fmt(selected)}</h2>${taskRows(selected)}<p class="footnote">O arquivo ICS inclui eventos individuais e alarmes. Seu calendário decide se importará e exibirá os alertas; novas alterações exigem nova exportação.</p></section></div>`
+    );
+  }
+  function journal() {
+    const state = getState();
+    const selected = getSelected();
+    let j = state.journal[selected] || {
+      sleep: '',
+      energy: 5,
+      mood: 5,
+      focus: 5,
+      text: '',
+      next: '',
+    };
+    return (
+      heading('Diário pessoal', 'Um espaço privado para observar sua experiência.') +
+      `<div class="grid2"><section class="card">${dateNav()}<form id="journal-form"><div class="field"><label for="sleep">Horas de sono no total</label><input id="sleep" name="sleep" type="number" min="0" max="24" step="0.25" required value="${j.sleep}" placeholder="Ex.: 7.5"></div>${[
+        ['energy', 'Energia'],
+        ['mood', 'Estado emocional'],
+        ['focus', 'Concentração'],
+      ]
+        .map(
+          ([k, l]) =>
+            `<div class="field"><label for="${k}">${l} (0–10) · <output id="${k}-out">${j[k]}</output></label><input type="range" id="${k}" name="${k}" min="0" max="10" value="${j[k]}" data-range="${k}"></div>`,
+        )
+        .join(
+          '',
+        )}<div class="field"><label for="text">O que aconteceu? O que aprendi e senti?</label><textarea id="text" name="text" maxlength="10000">${esc(j.text)}</textarea></div><div class="field"><label for="next">Uma pequena ação sob meu controle amanhã</label><textarea id="next" name="next" maxlength="10000">${esc(j.next)}</textarea></div><button class="primary" type="submit" ${selected > today() ? 'disabled' : ''}>Salvar registro</button></form></section><section class="card"><h2>Registros recentes</h2>${
+        Object.entries(state.journal)
+          .sort(([a], [b]) => b.localeCompare(a))
+          .slice(0, 14)
+          .map(
+            ([k, v]) =>
+              `<div class="journal-entry"><div class="row spread"><strong>${fmt(k)}</strong><button data-journal="${k}" class="icon-btn" aria-label="Abrir registro">${ico('edit')}</button></div><small>Sono ${v.sleep}h · Energia ${v.energy}/10 · Humor ${v.mood}/10</small><p>${esc(v.text)}</p><p>${esc(v.next)}</p></div>`,
+          )
+          .join('') || '<p>Seus registros aparecerão aqui.</p>'
+      }</section></div>`
+    );
+  }
+  function evolution() {
+    const state = getState();
+    let dates = Array.from({ length: 7 }, (_, i) => shift(today(), i - 6)),
+      js = dates.map((k) => state.journal[k]).filter(Boolean);
+    return (
+      heading('Minha evolução', 'Compare registros reais, sem notas sobre seu valor pessoal.') +
+      `<div class="stack"><section class="card"><h2>Últimos 7 dias · tarefas realizadas</h2>${bars()}<div class="grid3" style="margin-top:18px">${Object.keys(
+        pillars,
+      )
+        .map((p) => {
+          let s = dates.reduce(
+            (a, k) => {
+              let b = stat(k, p);
+              return { n: a.n + b.n, d: a.d + b.d };
+            },
+            { n: 0, d: 0 },
+          );
+          return `<div class="pillar ${p}"><div class="pillar-label">${ico(p)}${pillars[p]}</div><div class="metric">${s.d}/${s.n}</div><small>${s.n ? percentage(s) + '% das planejadas' : 'Sem tarefas'}</small></div>`;
+        })
+        .join(
+          '',
+        )}</div></section><section class="card"><h2>Últimos 7 dias · autorrelatos</h2><p>${js.length} de 7 dias registrados</p>${
+        js.length
+          ? `<div class="grid2">${[
+              ['sleep', 'Sono (h)'],
+              ['energy', 'Energia (/10)'],
+              ['mood', 'Estado emocional (/10)'],
+              ['focus', 'Concentração (/10)'],
+            ]
+              .map(
+                ([k, l]) =>
+                  `<div><small>${l} · média dos dias registrados</small><div class="metric">${(js.reduce((a, j) => a + j[k], 0) / js.length).toFixed(1).replace('.', ',')}</div></div>`,
+              )
+              .join('')}</div>`
+          : '<p>Sem registros ainda.</p>'
+      }</section><section class="card"><h2>Revisão semanal</h2><p>O que funcionou? O que atrapalhou? Qual atividade posso tornar menor? Que mudança precisa de ajuda externa?</p>${btn('Refletir no diário', 'open-journal', 'primary')}</section></div>`
+    );
+  }
+  function settings() {
+    const state = getState();
+    return (
+      heading('Ajustes', 'Controle seus dados, sua rotina e seus lembretes.') +
+      `<div class="stack"><section class="card"><h2>Personalização</h2><p>Recriar o plano preserva tarefas concluídas; se já concluiu alguma hoje, o novo plano começa amanhã. O questionário não faz diagnóstico.</p>${btn('Responder questionário', 'question', 'primary')}${' '}${btn('Alterar nome', 'profile')}</section><section class="card"><h2>Notificações e instalação</h2><p>Lembretes são verificados enquanto a página está aberta e ativa. Navegadores podem suspender a aba; não há push em segundo plano nem garantia de alarme com o app fechado.</p><label class="checkline"><input type="checkbox" id="reminders" ${state.reminders ? 'checked' : ''}> Ativar lembretes no aplicativo</label><div class="row">${btn('Permitir notificações', 'permission', '', 'bell')}${btn('Instalar aplicativo', 'install')}${btn('Exportar calendário', 'ics', '', 'download')}</div><p class="footnote">No iPhone: Safari → Compartilhar → Adicionar à Tela de Início. No Android/desktop, use o menu de instalação do navegador.</p></section><section class="card"><h2>Dados e privacidade</h2><p>Não há conta nem servidor de dados. Registros ficam no armazenamento local deste navegador, sem criptografia adicional ou sincronização. Não use em dispositivo compartilhado sem proteção. A limpeza dos dados do navegador pode apagar seu histórico.</p><div class="row">${btn('Exportar backup', 'backup', '', 'download')}<label><input type="file" accept=".json,application/json" id="import" class="hidden"><button type="button" data-action="import">Importar backup ou rotina</button></label>${btn('Apagar todos os dados', 'reset', 'danger')}</div></section><section class="card"><h2>Sobre o plano</h2><p>Fundação (1–7), Estabilização (8–21), Reconstrução (22–45) e Desenvolvimento (46–90). Ajuste a carga conforme seu contexto, não automaticamente.</p><p>Este aplicativo não substitui orientação médica, psicológica ou financeira. Cansaço persistente ou sofrimento emocional merecem avaliação profissional.</p></section></div>`
+    );
+  }
+  function taskDialog(id) {
+    const state = getState();
+    const selected = getSelected();
+    let t = state.tasks.find((x) => x.id === id) || task('', 'body', '09:00', 15);
+    return {
+      title: id ? 'Editar tarefa' : 'Nova tarefa',
+      body: `<form id="task-form" data-id="${id ? esc(id) : ''}"><div class="field"><label for="tn">Nome da tarefa</label><input id="tn" name="name" required maxlength="150" value="${esc(t.name)}"></div><div class="field"><label for="tp">Pilar</label><select id="tp" name="pillar">${Object.entries(
+        pillars,
+      )
+        .map(([k, v]) => `<option value="${k}" ${k === t.pillar ? 'selected' : ''}>${v}</option>`)
+        .join(
+          '',
+        )}</select></div><div class="grid2"><div class="field"><label for="tt">Horário</label><input id="tt" name="time" type="time" required value="${t.time}"></div><div class="field"><label for="tm">Duração (min)</label><input id="tm" name="minutes" type="number" required min="1" max="720" value="${t.minutes}"></div></div><fieldset><legend>Repetir nos dias</legend><div class="days">${weekdays.map((d, i) => `<label><input type="checkbox" name="days" value="${i}" ${t.days.includes(i) ? 'checked' : ''}>${d}</label>`).join('')}</div></fieldset><label class="checkline"><input type="checkbox" name="reminder" ${t.reminder ? 'checked' : ''}> Lembrete no horário</label><p class="footnote">Alterações valem a partir de hoje; tarefas já concluídas hoje mantêm o registro e a edição vale a partir de amanhã.</p><button type="submit" class="primary">Salvar tarefa</button></form>`,
+    };
+  }
+  function question() {
+    const state = getState();
+    const selected = getSelected();
+    return {
+      title: 'Sua rotina, seu contexto',
+      body: `<form id="question-form"><p>Respostas opcionais. O plano é uma sugestão baseada em regras simples, não uma avaliação clínica. Nenhuma resposta é enviada para um servidor.</p><div class="field"><label for="qn">Como quer ser chamado?</label><input name="name" id="qn" maxlength="60" value="${esc(state.profile?.name || '')}"></div><div class="grid2"><div class="field"><label for="qw">Horário habitual de levantar</label><input id="qw" name="wake" type="time" value="08:00" required></div><div class="field"><label for="qb">Horário desejado de dormir</label><input id="qb" name="bed" type="time" value="23:00" required></div></div><div class="field"><label for="qa">Tempo disponível por dia para novos hábitos</label><select id="qa" name="available"><option value="20">20 minutos</option><option value="45" selected>45 minutos</option><option value="90">90 minutos</option><option value="150">150 minutos</option></select></div><div class="field"><label for="qe">Energia atual (autorrelato)</label><select id="qe" name="energy"><option value="low">Baixa</option><option value="medium" selected>Moderada</option><option value="high">Boa</option></select></div><fieldset><legend>Prioridades (escolha as que fazem sentido)</legend>${[
+        ['job', 'Recolocação profissional'],
+        ['study', 'Estudo e aprendizado'],
+        ['finance', 'Organização financeira'],
+        ['exercise', 'Atividade física'],
+        ['read', 'Leitura e reflexão'],
+        ['social', 'Relacionamentos e amizades'],
+        ['project', 'Projetos pessoais'],
+      ]
+        .map(
+          ([k, l]) =>
+            `<label class="checkline"><input type="checkbox" name="goals" value="${k}" ${['study', 'exercise', 'read'].includes(k) ? 'checked' : ''}>${l}</label>`,
+        )
+        .join(
+          '',
+        )}</fieldset><div class="field"><label for="qo">Compromissos ou restrições (opcional, não salvo)</label><textarea id="qo" name="context" placeholder="Ex.: trabalho à noite, horários de cuidado, falta de academia"></textarea><small>Use essas informações para revisar os horários sugeridos. O texto livre não é interpretado automaticamente.</small></div><button class="primary" type="submit">Pré-visualizar plano</button></form>`,
+    };
+  }
+  function preview(pendingPlan) {
+    return {
+      title: 'Seu plano inicial',
+      body: `<p>Revise os horários. As tarefas respeitam um orçamento aproximado de tempo, com cinco minutos adicionais para preparar o sono. Você pode mudar tudo depois.</p><div>${pendingPlan.list.map((t) => `<div class="task pillar ${t.pillar}" style="grid-template-columns:38px 1fr"><span class="pillar-icon">${ico(t.pillar)}</span><div><strong>${esc(t.name)}</strong><div class="task-meta">${t.time} · ${t.minutes} min · ${t.days.map((d) => weekdays[d]).join(', ')}</div></div></div>`).join('')}</div><p class="notice">Confira se o plano não conflita com compromissos, descanso ou saúde. Caso esteja muito cansado, diminua a carga e procure avaliação profissional se persistir.</p><div class="row">${btn('Aplicar plano', 'apply-plan', 'primary')}${btn('Voltar', 'question')}</div>`,
+    };
+  }
+  return {
+    dashboard,
+    routine,
+    calendar,
+    journal,
+    evolution,
+    settings,
+    taskDialog,
+    question,
+    preview,
+  };
 }

@@ -1,7 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { all } from '../../src/config/constants.mjs';
 import { today, shift, validDate } from '../../src/utils/dates.mjs';
-import { fresh, task, due, stat, retire, replaceTask, replacePlan, isActive, validate, validTask, phase } from '../../src/models/routine.mjs';
+import {
+  fresh,
+  task,
+  due,
+  stat,
+  retire,
+  replaceTask,
+  replacePlan,
+  isActive,
+  validate,
+  validTask,
+  phase,
+} from '../../src/models/routine.mjs';
 import { planFrom } from '../../src/models/plan.mjs';
 import { loadState, persistState } from '../../src/services/storage.mjs';
 import { buildCalendar, fold, icsEscape } from '../../src/services/calendar.mjs';
@@ -61,16 +73,16 @@ describe('routine history and schema v1', () => {
     const plan = { name: 'Teste', list: [task('Novo plano', 'body', '10:00', 10, all, day)] };
     replacePlan(s, plan, day);
     expect(stat(s, day)).toEqual({ n: 1, d: 1 });
-    expect(due(s, tomorrow).map(t => t.name)).toEqual(['Novo plano']);
+    expect(due(s, tomorrow).map((t) => t.name)).toEqual(['Novo plano']);
     const empty = fixture();
     replacePlan(empty, plan, day);
-    expect(due(empty, day).map(t => t.name)).toEqual(['Novo plano']);
+    expect(due(empty, day).map((t) => t.name)).toEqual(['Novo plano']);
   });
 
   it('round-trips the stable local storage key and rejects invalid backup', () => {
     const s = fixture();
     const data = new Map();
-    const storage = { getItem: k => data.get(k), setItem: (k, v) => data.set(k, v) };
+    const storage = { getItem: (k) => data.get(k), setItem: (k, v) => data.set(k, v) };
     persistState(storage, s);
     expect(data.has('cme-v1')).toBe(true);
     expect(loadState(storage)).toEqual(s);
@@ -82,10 +94,17 @@ describe('routine history and schema v1', () => {
 describe('planning and presentation', () => {
   it('preserves pillars and budget with five extra minutes for sleep', () => {
     const f = new FormData();
-    for (const [k, v] of Object.entries({ name: 'Teste', wake: '08:00', bed: '22:00', available: '20', energy: 'low' })) f.set(k, v);
+    for (const [k, v] of Object.entries({
+      name: 'Teste',
+      wake: '08:00',
+      bed: '22:00',
+      available: '20',
+      energy: 'low',
+    }))
+      f.set(k, v);
     for (const g of ['job', 'study', 'exercise', 'read']) f.append('goals', g);
     const plan = planFrom(f);
-    expect([...new Set(plan.list.map(t => t.pillar))]).toEqual(['mind', 'body', 'spirit']);
+    expect([...new Set(plan.list.map((t) => t.pillar))]).toEqual(['mind', 'body', 'spirit']);
     expect(plan.list.reduce((n, t) => n + t.minutes, 0)).toBeLessThanOrEqual(25);
   });
 

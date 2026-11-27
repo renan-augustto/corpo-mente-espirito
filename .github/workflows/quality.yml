@@ -17,7 +17,7 @@ jobs:
           node-version: '22'
       - run: npm install --global npm@11.21.3 --no-audit --no-fund
       - run: npm --version
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - run: npm run lint
       - run: npm run test:legacy
       - run: npm run test:coverage
@@ -35,19 +35,8 @@ jobs:
           node-version: '22'
       - run: npm install --global npm@11.21.3 --no-audit --no-fund
       - run: npm --version
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - run: npm run format:check
-        id: prettier-check
-      - name: Collect formatting changes and generated lockfile (bootstrap only)
-        if: ${{ !cancelled() && (steps.prettier-check.outcome == 'failure' || steps.prettier-check.outcome == 'success') }}
-        run: |
-          npm run format
-          node scripts/ci-format-evidence.mjs
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() && (steps.prettier-check.outcome == 'failure' || steps.prettier-check.outcome == 'success') }}
-        with:
-          name: bootstrap-lockfile
-          path: package-lock.json
   e2e:
     runs-on: ubuntu-latest
     steps:
@@ -57,7 +46,7 @@ jobs:
           node-version: '22'
       - run: npm install --global npm@11.21.3 --no-audit --no-fund
       - run: npm --version
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
