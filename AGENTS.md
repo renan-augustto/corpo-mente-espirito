@@ -6,3 +6,5 @@ Leia docs/ROADMAP.md e as Issues antes de alterar o projeto. O proprietário apr
 - Não inclua dados pessoais, backups, credenciais, chaves IA ou tokens em código, Issues, logs, fixtures ou commits.
 - Código legível e modular, responsabilidades MVC, dependências explícitas; evite frameworks e infraestrutura novos sem justificativa aprovada.
 - Não marque Issue como concluída sem critérios de aceitação e evidência de teste.
+
+- Siga docs/QUALIDADE_E_HOMOLOGACAO.md; cada Issue tem DoD, UAT específica quando em execução e aceite registrado. Atualize docs/MANUAL_USUARIO.md a cada entrega; funcionalidades futuras não devem parecer disponíveis.

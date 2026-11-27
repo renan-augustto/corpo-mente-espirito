@@ -36,3 +36,6 @@ Decisões consolidadas em 27/11/2026. As Issues são a fonte de trabalho e crit�
 
 ## Escopo ativo: 1.0.1
 Somente #1 e #3. Sem login, IA, pagamentos, migração SQLite, módulos novos ou alterações comerciais nesta entrega. Preservar schema v1, chave cme-v1 e exportação JSON. Corrigir histórico no dia de edição/encerramento/replanejamento com regressões explícitas; validar sete fluxos aceitos, calendário, offline e instalação. Promover apenas após testes e aprovação do proprietário. Não expor informações pessoais no repositório público.
+
+## Governança de qualidade
+Manual: [MANUAL_USUARIO.md](MANUAL_USUARIO.md). Processo: [QUALIDADE_E_HOMOLOGACAO.md](QUALIDADE_E_HOMOLOGACAO.md). Cada Issue possui DoD e responsabilidades do proprietário; UATs do sprint: #21 e #22. Não ampliam escopo funcional.

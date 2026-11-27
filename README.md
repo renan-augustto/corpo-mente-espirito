@@ -2,6 +2,9 @@
 
 Planejamento e decisões de arquitetura: [roadmap oficial](docs/ROADMAP.md). Orientações de desenvolvimento: [AGENTS.md](AGENTS.md).
 
+- [Manual do usuário](docs/MANUAL_USUARIO.md)
+- [Qualidade, Definition of Done e homologação](docs/QUALIDADE_E_HOMOLOGACAO.md)
+
 Aplicativo pessoal de rotina, hábitos e reflexão. PWA estática, em português, sem dependências externas, sem conta e sem servidor de dados.
 
 ## Publicar no GitHub Pages (sem programação)
