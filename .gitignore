@@ -1,0 +1,4 @@
+*.backup.json
+*tres-pilares-backup*.json
+perfil-pessoal*.json
+.DS_Store
