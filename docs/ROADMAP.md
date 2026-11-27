@@ -30,7 +30,7 @@ Decisões consolidadas em 27/11/2026. As Issues são a fonte de trabalho e crit�
 - ES modules JavaScript, MVC (models/views/controllers/services), modelos independentes de DOM, tipos de tarefa extensíveis; HTML/CSS atuais nesta fase.
 - Vitest, Playwright, ESLint, Prettier, GitHub Actions; Appium fora do escopo inicial, validação nativa em aparelho real.
 - Capacitor; SQLite mobile, IndexedDB web, JSON interoperável; Keystore/Keychain conforme integração e plataforma.
-- Cloudflare Pages/Workers e Supabase Auth/PostgreSQL exclusivamente comercial, propostos para fases posteriores; Google/Apple OAuth, Drive appDataFolder/iCloud conforme viabilidade.
+- Cloudflare Pages antecipado exclusivamente para hospedagem web e previews da #3; Workers e Supabase Auth/PostgreSQL comercial permanecem nas fases posteriores; Google/Apple OAuth, Drive appDataFolder/iCloud conforme viabilidade.
 - Gemini/OpenAI/Claude e outros por adaptadores, BYOK sujeito a segurança e termos; não assumir que login Google concede acesso ao Gemini. Integrações precisam de homologação individual.
 - GitHub Pages apenas validação não comercial enquanto infraestrutura comercial não estiver pronta.
 
@@ -39,3 +39,6 @@ Somente #1 e #3. Sem login, IA, pagamentos, migração SQLite, módulos novos ou
 
 ## Governança de qualidade
 Manual: [MANUAL_USUARIO.md](MANUAL_USUARIO.md). Processo: [QUALIDADE_E_HOMOLOGACAO.md](QUALIDADE_E_HOMOLOGACAO.md). Cada Issue possui DoD e responsabilidades do proprietário; UATs do sprint: #21 e #22. Não ampliam escopo funcional.
+
+## Hospedagem web antecipada
+[Configuração de hospedagem e homologação](HOSPEDAGEM.md): Cloudflare Pages conectado, primeiro deploy main informado pelo proprietário, preview e CI ainda a validar. GitHub Pages legado mantido durante a transição.
