@@ -2,3 +2,9 @@
 *tres-pilares-backup*.json
 perfil-pessoal*.json
 .DS_Store
+
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
